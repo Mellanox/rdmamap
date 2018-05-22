@@ -19,6 +19,7 @@ func TestRdmaCharDevices(t *testing.T) {
 		fmt.Printf("Rdma device: = %s", dev)
 		fmt.Println(" Char devices: = ", charDevices)
 	}
+	t.Fatal(nil)
 }
 
 func TestRdmaDeviceForNetdevice(t *testing.T) {

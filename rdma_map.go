@@ -28,6 +28,7 @@ const (
 	RdmaPortsdir       = "ports"
 
 	RdmaNodeGuidFile = "node_guid"
+	RdmaUcmDevice    = "/dev/infiniband/rdma_cm"
 )
 
 // Returns a list of rdma device names
@@ -120,6 +121,18 @@ func getUverbDevice(rdmaDeviceName string) (string, error) {
 		RdmaUverbsFilxPrefix)
 }
 
+func getRdmaUcmDevice() (string, error) {
+	info, err := os.Stat(RdmaUcmDevice)
+	if err != nil {
+		return "", err
+	}
+	if info.Name() == "rdma_cm" {
+		return RdmaUcmDevice, nil
+	} else {
+		return "", fmt.Errorf("Invalid file name rdma_cm")
+	}
+}
+
 // Returns a list of character device absolute path for a requested
 // rdmaDeviceName.
 // Returns nil if no character devices are found.
@@ -143,6 +156,11 @@ func GetRdmaCharDevices(rdmaDeviceName string) []string {
 	if err == nil {
 		rdmaCharDevices = append(rdmaCharDevices, uverb)
 	}
+	rdma_cm, err := getRdmaUcmDevice()
+	if err == nil {
+		rdmaCharDevices = append(rdmaCharDevices, rdma_cm)
+	}
+
 	return rdmaCharDevices
 }
 
