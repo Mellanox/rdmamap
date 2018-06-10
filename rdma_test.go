@@ -33,3 +33,14 @@ func TestRdmaDeviceForNetdevice(t *testing.T) {
 	}
 	t.Fatal(nil)
 }
+
+func TestRdmaDeviceStats(t *testing.T) {
+
+	stats, err := GetRDmaSysfsAllPortsStats("mlx5_1")
+	if err == nil {
+		fmt.Println(stats)
+	} else {
+		fmt.Println("error is: ", err)
+	}
+	t.Fatal(nil)
+}

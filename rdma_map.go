@@ -29,6 +29,9 @@ const (
 
 	RdmaNodeGuidFile = "node_guid"
 	RdmaUcmDevice    = "/dev/infiniband/rdma_cm"
+
+	RdmaCountersDir   = "counters"
+	RdmaHwCountersDir = "hw_counters"
 )
 
 // Returns a list of rdma device names
