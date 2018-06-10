@@ -8,7 +8,7 @@ Local build and test
 
 You can use go get command:
 ```
-go get github.com/Mellanox/rdmamap.git
+go get github.com/Mellanox/rdmamap
 ```
 
 Example:
