@@ -1,7 +1,11 @@
 package rdmamap
 
 import (
+	"fmt"
+	"github.com/vishvananda/netns"
 	"io/ioutil"
+	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -134,4 +138,61 @@ func GetRdmaSysfsAllPortsStats(rdmaDevice string) (RdmaStats, error) {
 		allstats.PortStats = append(allstats.PortStats, portstats)
 	}
 	return allstats, nil
+}
+
+func printRdmaStats(device string, stats *RdmaStats) {
+
+	for _, portstats := range stats.PortStats {
+		fmt.Printf("device: %s, port: %d\n", device, portstats.Port)
+		fmt.Println("Hw stats:")
+		for _, entry := range portstats.HwStats {
+			fmt.Printf("%s: %d\n", entry.Name, entry.Value)
+		}
+		fmt.Println("Stats:")
+		for _, entry := range portstats.HwStats {
+			fmt.Printf("%s: %d\n", entry.Name, entry.Value)
+		}
+	}
+}
+
+// Get RDMA statistics of a docker container.
+// containerId is prefixed matched against the running docker containers,
+// so a non ambiguous short identifier can be supplied as well.
+func GetDockerContainerRdmaStats(containerId string) {
+
+	originalHandle, err := netns.Get()
+	if err != nil {
+		log.Println("Fail to get handle of current net ns", err)
+		return
+	}
+
+	nsHandle, err := netns.GetFromDocker(containerId)
+	if err != nil {
+		log.Println("Invalid docker id: ", containerId)
+		return
+	}
+	netns.Set(nsHandle)
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		netns.Set(originalHandle)
+		return
+	}
+	log.Printf("Net Interfaces: %v\n", ifaces)
+	for _, iface := range ifaces {
+		if iface.Name == "lo" {
+			continue
+		}
+		rdmadev, err := GetRdmaDeviceForNetdevice(iface.Name)
+		if err != nil {
+			continue
+		}
+		rdmastats, err := GetRdmaSysfsAllPortsStats(rdmadev)
+		if err != nil {
+			log.Println("Fail to query device stats: ", err)
+			continue
+		}
+		printRdmaStats(rdmadev, &rdmastats)
+	}
+	netns.Set(originalHandle)
 }
