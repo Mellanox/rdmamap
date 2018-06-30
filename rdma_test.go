@@ -36,7 +36,7 @@ func TestRdmaDeviceForNetdevice(t *testing.T) {
 
 func TestRdmaDeviceStats(t *testing.T) {
 
-	stats, err := GetRDmaSysfsAllPortsStats("mlx5_1")
+	stats, err := GetRdmaSysfsAllPortsStats("mlx5_1")
 	if err == nil {
 		fmt.Println(stats)
 	} else {

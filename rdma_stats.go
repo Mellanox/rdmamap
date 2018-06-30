@@ -108,7 +108,7 @@ func GetRdmaSysfsAllStats(rdmaDevice string, port int) (RdmaPortStats, error) {
 
 // Get RDMA sysfs starts from counter and hw_counters directory for a
 // rdma device.
-func GetRDmaSysfsAllPortsStats(rdmaDevice string) (RdmaStats, error) {
+func GetRdmaSysfsAllPortsStats(rdmaDevice string) (RdmaStats, error) {
 	var allstats RdmaStats
 
 	path := filepath.Join(RdmaClassDir, rdmaDevice, RdmaPortsdir)
