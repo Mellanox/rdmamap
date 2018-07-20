@@ -149,7 +149,7 @@ func printRdmaStats(device string, stats *RdmaStats) {
 			fmt.Printf("%s: %d\n", entry.Name, entry.Value)
 		}
 		fmt.Println("Stats:")
-		for _, entry := range portstats.HwStats {
+		for _, entry := range portstats.Stats {
 			fmt.Printf("%s: %d\n", entry.Name, entry.Value)
 		}
 	}
