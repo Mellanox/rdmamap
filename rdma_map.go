@@ -251,7 +251,7 @@ func getRdmaDeviceForEth(netdevName string) (string, error) {
 			}
 		}
 	}
-	return "", nil
+	return "", fmt.Errorf("rdma device not found for netdev %v", netdevName)
 }
 
 func getNodeGuid(rdmaDeviceName string) ([]byte, error) {
