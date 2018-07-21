@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -159,6 +160,9 @@ func printRdmaStats(device string, stats *RdmaStats) {
 // containerId is prefixed matched against the running docker containers,
 // so a non ambiguous short identifier can be supplied as well.
 func GetDockerContainerRdmaStats(containerId string) {
+	// Lock the OS Thread so we don't accidentally switch namespaces
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	originalHandle, err := netns.Get()
 	if err != nil {
