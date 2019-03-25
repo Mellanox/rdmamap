@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	RdmaClassName     = "infiniband"
 	RdmaClassDir      = "/sys/class/infiniband"
 	RdmaIbUcmDir      = "/sys/class/infiniband_cm"
 	RdmaUcmFilePrefix = "ucm"
@@ -32,6 +33,8 @@ const (
 
 	RdmaCountersDir   = "counters"
 	RdmaHwCountersDir = "hw_counters"
+
+	PciDevDir = "/sys/bus/pci/devices"
 )
 
 // Returns a list of rdma device names
@@ -333,4 +336,26 @@ func IsRDmaDeviceForNetdevice(netdevName string) bool {
 	} else {
 		return true
 	}
+}
+
+//Get list of RDMA devices for a pci device.
+//When switchdev mode is used, there may be more than one rdma device.
+func GetRdmaDevicesForPcidev(pcidevName string) []string {
+
+	var rdmadevs []string
+
+	dirName := filepath.Join(PciDevDir, pcidevName, RdmaClassName)
+
+	entries, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		return rdmadevs
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() == false || entry.Name() == "." || entry.Name() == ".." {
+			continue
+		}
+		rdmadevs = append(rdmadevs, entry.Name())
+	}
+	return rdmadevs
 }

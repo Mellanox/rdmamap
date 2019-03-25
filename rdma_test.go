@@ -55,3 +55,9 @@ func TestRdmaDeviceStats(t *testing.T) {
 	}
 	t.Fatal(nil)
 }
+
+func TestRdmaDeviceForPcidev(t *testing.T) {
+	devs := GetRdmaDevicesForPcidev("0000:05:00.0")
+	fmt.Println(devs)
+	t.Fatal(nil)
+}
