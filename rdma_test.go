@@ -29,8 +29,19 @@ func TestRdmaDeviceForNetdevice(t *testing.T) {
 	if err == nil {
 		fmt.Printf("netdev = %s, rdmadev = %s\n", netdev, rdmaDev)
 	} else {
-		fmt.Println("rdma device not found for netdev = %s\n", netdev)
+		fmt.Printf("rdma device not found for netdev = %s\n", netdev)
 	}
+
+	found := IsRDmaDeviceForNetdevice(netdev)
+	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
+
+	netdev = "ens1f0"
+	found = IsRDmaDeviceForNetdevice(netdev)
+	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
+
+	netdev = "lo"
+	found = IsRDmaDeviceForNetdevice(netdev)
+	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
 	t.Fatal(nil)
 }
 

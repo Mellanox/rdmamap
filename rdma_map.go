@@ -324,3 +324,13 @@ func GetRdmaDeviceForNetdevice(netdevName string) (string, error) {
 		return "", fmt.Errorf("Unknown device type")
 	}
 }
+
+//Returns true if rdma device exist for netdevice, else false
+func IsRDmaDeviceForNetdevice(netdevName string) bool {
+	rdma, _ := GetRdmaDeviceForNetdevice(netdevName)
+	if rdma == "" {
+		return false
+	} else {
+		return true
+	}
+}
