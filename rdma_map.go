@@ -30,6 +30,7 @@ const (
 
 	RdmaNodeGuidFile = "node_guid"
 	RdmaUcmDevice    = "/dev/infiniband/rdma_cm"
+	RdmaDeviceDir    = "/dev/infiniband"
 
 	RdmaCountersDir   = "counters"
 	RdmaHwCountersDir = "hw_counters"
