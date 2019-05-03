@@ -7,19 +7,18 @@ import (
 
 func TestGetRdmaDevices(t *testing.T) {
 	rdmaDevices := GetRdmaDeviceList()
-	fmt.Println("Devices: ", rdmaDevices)
+	t.Log("Devices: ", rdmaDevices)
 }
 
 func TestRdmaCharDevices(t *testing.T) {
 	rdmaDevices := GetRdmaDeviceList()
-	fmt.Println("Devices: ", rdmaDevices)
+	t.Log("Devices: ", rdmaDevices)
 
 	for _, dev := range rdmaDevices {
 		charDevices := GetRdmaCharDevices(dev)
 		fmt.Printf("Rdma device: = %s", dev)
-		fmt.Println(" Char devices: = ", charDevices)
+		t.Log(" Char devices: = ", charDevices)
 	}
-	t.Fatal(nil)
 }
 
 func TestRdmaDeviceForNetdevice(t *testing.T) {
@@ -42,22 +41,19 @@ func TestRdmaDeviceForNetdevice(t *testing.T) {
 	netdev = "lo"
 	found = IsRDmaDeviceForNetdevice(netdev)
 	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
-	t.Fatal(nil)
 }
 
 func TestRdmaDeviceStats(t *testing.T) {
 
 	stats, err := GetRdmaSysfsAllPortsStats("mlx5_1")
 	if err == nil {
-		fmt.Println(stats)
+		t.Log(stats)
 	} else {
-		fmt.Println("error is: ", err)
+		t.Log("error is: ", err)
 	}
-	t.Fatal(nil)
 }
 
 func TestRdmaDeviceForPcidev(t *testing.T) {
 	devs := GetRdmaDevicesForPcidev("0000:05:00.0")
-	fmt.Println(devs)
-	t.Fatal(nil)
+	t.Log("rdma devs :", devs)
 }
