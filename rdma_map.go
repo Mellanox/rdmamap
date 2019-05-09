@@ -359,7 +359,8 @@ func GetRdmaDevicesForPcidev(pcidevName string) []string {
 		if entry.IsDir() == false {
 			continue
 		}
-		rdmadevs = append(rdmadevs, entry.Name())
+		rdmadev := filepath.Join(RdmaDeviceDir, entry.Name())
+		rdmadevs = append(rdmadevs, rdmadev)
 	}
 	return rdmadevs
 }
