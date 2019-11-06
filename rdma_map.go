@@ -171,7 +171,8 @@ func GetRdmaCharDevices(rdmaDeviceName string) []string {
 	return rdmaCharDevices
 }
 
-func getPorts(rdmaDeviceName string) []string {
+// Gets a list of ports for a specified device
+func GetPorts(rdmaDeviceName string) []string {
 	var ports []string
 
 	portsDir := filepath.Join(RdmaClassDir, rdmaDeviceName, RdmaPortsdir)
@@ -244,7 +245,7 @@ func getRdmaDeviceForEth(netdevName string) (string, error) {
 
 	devices := GetRdmaDeviceList()
 	for _, dev := range devices {
-		ports := getPorts(dev)
+		ports := GetPorts(dev)
 		for _, port := range ports {
 			indices := getNetdeviceIds(dev, port)
 			for _, index := range indices {
