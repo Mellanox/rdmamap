@@ -71,7 +71,7 @@ func isDirForRdmaDevice(rdmaDeviceName string, dirName string) bool {
 	if err != nil {
 		return false
 	}
-	return strings.Contains(string(data), rdmaDeviceName)
+	return (strings.Compare(strings.Trim(string(data), "\n"), rdmaDeviceName) == 0)
 }
 
 func getCharDevice(rdmaDeviceName string, classDir string,
