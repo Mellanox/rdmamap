@@ -22,7 +22,6 @@ func TestRdmaCharDevices(t *testing.T) {
 }
 
 func TestRdmaDeviceForNetdevice(t *testing.T) {
-
 	netdev := "ib0"
 	rdmaDev, err := GetRdmaDeviceForNetdevice(netdev)
 	if err == nil {
@@ -38,13 +37,12 @@ func TestRdmaDeviceForNetdevice(t *testing.T) {
 	found = IsRDmaDeviceForNetdevice(netdev)
 	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
 
-	netdev = "lo"
+	netdev = loopBackIfName
 	found = IsRDmaDeviceForNetdevice(netdev)
 	fmt.Printf("rdma device %t for netdev = %s\n", found, netdev)
 }
 
 func TestRdmaDeviceStats(t *testing.T) {
-
 	stats, err := GetRdmaSysfsAllPortsStats("mlx5_1")
 	if err == nil {
 		t.Log(stats)
