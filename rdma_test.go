@@ -55,3 +55,8 @@ func TestRdmaDeviceForPcidev(t *testing.T) {
 	devs := GetRdmaDevicesForPcidev("0000:05:00.0")
 	t.Log("rdma devs :", devs)
 }
+
+func TestRdmaDeviceForAuxdev(t *testing.T) {
+	devs := GetRdmaDevicesForAuxdev("mlx5_core.sf.4")
+	t.Log("rdma devs :", devs)
+}

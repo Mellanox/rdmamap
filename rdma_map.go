@@ -38,6 +38,7 @@ const (
 	RdmaHwCountersDir = "hw_counters"
 
 	PciDevDir = "/sys/bus/pci/devices"
+	AuxDevDir = "/sys/bus/auxiliary/devices"
 
 	// For local usage
 	prevDir        = ".."
@@ -356,16 +357,9 @@ func IsRDmaDeviceForNetdevice(netdevName string) bool {
 	return (rdma != "")
 }
 
-// Get list of RDMA devices for a pci device.
-// When switchdev mode is used, there may be more than one rdma device.
-// Example pcidevName: 0000:05:00:00,
-// when found, returns list of devices one or more devices names such as
-// mlx5_0, mlx5_10
 //nolint:prealloc
-func GetRdmaDevicesForPcidev(pcidevName string) []string {
+func getRdmaDevicesFromDir(dirName string) []string {
 	var rdmadevs []string
-
-	dirName := filepath.Join(PciDevDir, pcidevName, RdmaClassName)
 
 	entries, err := ioutil.ReadDir(dirName)
 	if err != nil {
@@ -379,4 +373,24 @@ func GetRdmaDevicesForPcidev(pcidevName string) []string {
 		rdmadevs = append(rdmadevs, entry.Name())
 	}
 	return rdmadevs
+}
+
+// Get list of RDMA devices for a pci device.
+// When switchdev mode is used, there may be more than one rdma device.
+// Example pcidevName: 0000:05:00.0,
+// when found, returns list of devices one or more devices names such as
+// mlx5_0, mlx5_10
+func GetRdmaDevicesForPcidev(pcidevName string) []string {
+	dirName := filepath.Join(PciDevDir, pcidevName, RdmaClassName)
+	return getRdmaDevicesFromDir(dirName)
+}
+
+// Get list of RDMA devices for an auxiliary device.
+// When switchdev mode is used, there may be more than one rdma device.
+// Example deviceID: mlx5_core.sf.4,
+// when found, returns list of devices one or more devices names such as
+// mlx5_0, mlx5_10
+func GetRdmaDevicesForAuxdev(deviceID string) []string {
+	dirName := filepath.Join(AuxDevDir, deviceID, RdmaClassName)
+	return getRdmaDevicesFromDir(dirName)
 }
