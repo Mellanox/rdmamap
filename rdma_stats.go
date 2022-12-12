@@ -181,16 +181,20 @@ func GetDockerContainerRdmaStats(containerID string) {
 
 	nsHandle, err := netns.GetFromDocker(containerID)
 	if err != nil {
-		log.Println("Invalid docker id: ", containerID)
-		return
-	}
-	if netns.Set(nsHandle) != nil {
+		log.Printf("Invalid docker id (\"%s\"): %v", containerID, err)
 		return
 	}
 
+	err = netns.Set(nsHandle)
+	if err != nil {
+		log.Println("Fail to set namespace: ", err)
+		return
+	}
+	defer netns.Set(originalHandle)
+
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		_ = netns.Set(originalHandle)
+		log.Println("Fail to get Net Interfaces: ", err)
 		return
 	}
 	log.Printf("Net Interfaces: %v\n", ifaces)
@@ -209,5 +213,4 @@ func GetDockerContainerRdmaStats(containerID string) {
 		}
 		printRdmaStats(rdmadev, &rdmastats)
 	}
-	_ = netns.Set(originalHandle)
 }
