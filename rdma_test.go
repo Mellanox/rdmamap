@@ -21,7 +21,7 @@ func TestRdmaCharDevices(t *testing.T) {
 	}
 }
 
-func TestRdmaDeviceForNetdevice(t *testing.T) {
+func TestRdmaDeviceForNetdevice(_ *testing.T) {
 	netdev := "ib0"
 	rdmaDev, err := GetRdmaDeviceForNetdevice(netdev)
 	if err == nil {

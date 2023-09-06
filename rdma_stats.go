@@ -3,7 +3,6 @@ package rdmamap
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -31,7 +30,7 @@ type RdmaStats struct {
 }
 
 func readCounter(name string) uint64 {
-	fd, err := os.OpenFile(name, os.O_RDONLY, 0444)
+	fd, err := os.OpenFile(name, os.O_RDONLY, ReadOnlyPermissions)
 	if err != nil {
 		return 0
 	}
@@ -41,7 +40,7 @@ func readCounter(name string) uint64 {
 		return 0
 	}
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	if err != nil {
 		return 0
 	}
@@ -190,7 +189,12 @@ func GetDockerContainerRdmaStats(containerID string) {
 		log.Println("Fail to set namespace: ", err)
 		return
 	}
-	defer netns.Set(originalHandle)
+	defer func(ns netns.NsHandle) {
+		e := netns.Set(ns)
+		if e != nil {
+			log.Println("Fail to set the current network namespace: ", e)
+		}
+	}(originalHandle)
 
 	ifaces, err := net.Interfaces()
 	if err != nil {

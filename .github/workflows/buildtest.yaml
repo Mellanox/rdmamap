@@ -1,0 +1,59 @@
+name: go-build-and-test-amd64
+on:
+    push:
+    pull_request:
+jobs:
+  build:
+    name: build
+    strategy:
+      matrix:
+        go-version: [1.20.x]
+        os: [ubuntu-22.04]
+        goos: [linux]
+        goarch: [amd64]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: build test for ${{ matrix.goarch }}
+        env:
+          GOARCH: ${{ matrix.goarch }}
+          GOOS: ${{ matrix.goos }}
+        run: make build
+   
+  test:
+    name: test
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.x
+      - name: check out code into the Go module directory
+        uses: actions/checkout@v3
+      - name: run unit-test
+        run: make test
+
+  coverage:
+    runs-on: ubuntu-22.04
+    needs: build
+    name: coverage
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.x
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: Go test with coverage
+        run: make test-coverage
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: rdmamap.cover
