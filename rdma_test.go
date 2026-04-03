@@ -160,6 +160,102 @@ func TestGetRdmaCharDevices_MultiPort(t *testing.T) {
 	}
 }
 
+func TestGetRdmaUcmDevices_Found(t *testing.T) {
+	tmpDir := t.TempDir()
+	ucmFile := filepath.Join(tmpDir, "rdma_cm")
+	if err := os.WriteFile(ucmFile, []byte(""), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	origUcmDevice := RdmaUcmDevice
+	defer func() { RdmaUcmDevice = origUcmDevice }()
+	RdmaUcmDevice = ucmFile
+
+	devices := getRdmaUcmDevices()
+	if len(devices) != 1 {
+		t.Fatalf("expected 1 device, got %d: %v", len(devices), devices)
+	}
+	if devices[0] != ucmFile {
+		t.Errorf("got %q, want %q", devices[0], ucmFile)
+	}
+}
+
+func TestGetRdmaUcmDevices_NotFound(t *testing.T) {
+	origUcmDevice := RdmaUcmDevice
+	defer func() { RdmaUcmDevice = origUcmDevice }()
+	RdmaUcmDevice = "/nonexistent/rdma_cm"
+
+	devices := getRdmaUcmDevices()
+	if devices != nil {
+		t.Errorf("expected nil, got %v", devices)
+	}
+}
+
+func TestGetRdmaUcmDevices_WrongName(t *testing.T) {
+	tmpDir := t.TempDir()
+	wrongFile := filepath.Join(tmpDir, "not_rdma_cm")
+	if err := os.WriteFile(wrongFile, []byte(""), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	origUcmDevice := RdmaUcmDevice
+	defer func() { RdmaUcmDevice = origUcmDevice }()
+	RdmaUcmDevice = wrongFile
+
+	devices := getRdmaUcmDevices()
+	if devices != nil {
+		t.Errorf("expected nil, got %v", devices)
+	}
+}
+
+func TestGetRdmaCharDevices_WithRdmaCm(t *testing.T) {
+	ucmDir := t.TempDir()
+	umadDir := t.TempDir()
+	uverbsDir := t.TempDir()
+	rdmaCmDir := t.TempDir()
+	rdmaCmFile := filepath.Join(rdmaCmDir, "rdma_cm")
+	if err := os.WriteFile(rdmaCmFile, []byte(""), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	origUcmDir := RdmaIbUcmDir
+	origUmadDir := RdmaUmadDir
+	origUverbsDir := RdmaUverbsDir
+	origUcmDevice := RdmaUcmDevice
+	defer func() {
+		RdmaIbUcmDir = origUcmDir
+		RdmaUmadDir = origUmadDir
+		RdmaUverbsDir = origUverbsDir
+		RdmaUcmDevice = origUcmDevice
+	}()
+	RdmaIbUcmDir = ucmDir
+	RdmaUmadDir = umadDir
+	RdmaUverbsDir = uverbsDir
+	RdmaUcmDevice = rdmaCmFile
+
+	createFakeSysfsDevice(t, umadDir, "umad0", "mlx5_0")
+	createFakeSysfsDevice(t, uverbsDir, "uverbs0", "mlx5_0")
+
+	devices := GetRdmaCharDevices("mlx5_0")
+	sort.Strings(devices)
+
+	expected := []string{
+		rdmaCmFile,
+		"/dev/infiniband/umad0",
+		"/dev/infiniband/uverbs0",
+	}
+	sort.Strings(expected)
+
+	if len(devices) != len(expected) {
+		t.Fatalf("expected %d devices, got %d: %v", len(expected), len(devices), devices)
+	}
+	for i := range expected {
+		if devices[i] != expected[i] {
+			t.Errorf("device[%d] = %q, want %q", i, devices[i], expected[i])
+		}
+	}
+}
+
 func TestGetRdmaCharDevices_NoDevices(t *testing.T) {
 	emptyDir := t.TempDir()
 

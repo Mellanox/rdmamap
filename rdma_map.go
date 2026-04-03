@@ -25,6 +25,7 @@ const (
 	RdmaGidAttrDir     = "gid_attrs" //nolint:revive
 	RdmaGidAttrNdevDir = "ndevs"     //nolint:revive
 	RdmaPortsdir       = "ports"
+	RdmaGidsDir        = "gids"
 
 	RdmaNodeGuidFile = "node_guid" //nolint:revive
 
@@ -35,6 +36,12 @@ const (
 	prevDir        = ".."
 	nibbleBitSize  = 4
 	loopBackIfName = "lo"
+
+	// GID format constants
+	gidParts            = 8 // Number of colon-separated parts in a GID
+	portGUIDStartIndex  = 4 // Port GUID starts at index 4 in the GID parts
+	gidPartLength       = 4 // Each GID part is 4 hex characters
+	hexBytePairLength   = 2 // 2 hex characters represent 1 byte
 
 	ReadOnlyPermissions = 0444
 )
@@ -295,18 +302,74 @@ func getNodeGUID(rdmaDeviceName string) ([]byte, error) {
 	return nodeGUID, nil
 }
 
+func getPortGUID(rdmaDeviceName, port string) ([]byte, error) {
+	// Read the GID from port's gids/0
+	// The GID format is: fe80:0000:0000:0000:PPPP:PPPP:PPPP:PPPP
+	// where the last 8 bytes (64 bits) are the port GUID
+	fileName := filepath.Join(RdmaClassDir, rdmaDeviceName, RdmaPortsdir, port, RdmaGidsDir, "0")
+
+	fd, err := os.OpenFile(fileName, os.O_RDONLY, ReadOnlyPermissions)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	if _, err = fd.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	data, err := io.ReadAll(fd)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse GID format: "fe80:0000:0000:0000:0015:5dff:fd34:025b\n"
+	gidStr := strings.TrimSpace(string(data))
+	parts := strings.Split(gidStr, ":")
+	if len(parts) != gidParts {
+		return nil, fmt.Errorf("invalid GID format: %s", gidStr)
+	}
+
+	// Extract last 4 groups (8 bytes) which represent the port GUID
+	var portGUID []byte
+	for i := portGUIDStartIndex; i < gidParts; i++ {
+		// Each part is 4 hex digits (2 bytes)
+		if len(parts[i]) != gidPartLength {
+			return nil, fmt.Errorf("invalid GID part: %s", parts[i])
+		}
+		// Parse first byte
+		b1, err := strconv.ParseUint(parts[i][0:hexBytePairLength], 16, 8)
+		if err != nil {
+			return nil, err
+		}
+		// Parse second byte
+		b2, err := strconv.ParseUint(parts[i][hexBytePairLength:gidPartLength], 16, 8)
+		if err != nil {
+			return nil, err
+		}
+		portGUID = append(portGUID, byte(b1), byte(b2))
+	}
+
+	return portGUID, nil
+}
+
 func getRdmaDeviceForIb(linkAttr *netlink.LinkAttrs) (string, error) {
-	// Match the node_guid EUI bytes with the IpoIB netdevice hw address EUI
+	// Match the port GUID EUI bytes with the IpoIB netdevice hw address EUI
+	// IPoIB hardware addresses encode the port GUID, not the node GUID
 	lleui64 := linkAttr.HardwareAddr[12:]
 
 	devices := GetRdmaDeviceList()
 	for _, dev := range devices {
-		nodeGUID, err := getNodeGUID(dev)
-		if err != nil {
-			return "", err
-		}
-		if bytes.Equal(lleui64, nodeGUID) {
-			return dev, nil
+		ports := GetPorts(dev)
+		for _, port := range ports {
+			portGUID, err := getPortGUID(dev, port)
+			if err != nil {
+				// If we can't read the port GUID, skip this port
+				continue
+			}
+			if bytes.Equal(lleui64, portGUID) {
+				return dev, nil
+			}
 		}
 	}
 	return "", nil
