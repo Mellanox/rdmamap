@@ -99,20 +99,17 @@ func GetRdmaSysfsHwStats(rdmaDevice string, port int) ([]RdmaStatEntry, error) {
 // Get RDMA sysfs starts from counter and hw_counters directory for a requested
 // port of a device.
 func GetRdmaSysfsAllStats(rdmaDevice string, port int) (RdmaPortStats, error) {
-	var portstats RdmaPortStats
+	portstats := RdmaPortStats{Port: port}
 
-	hwstats, err := GetRdmaSysfsHwStats(rdmaDevice, port)
-	if err != nil {
-		return portstats, nil
+	// A port may have only one of the two directories: there is no counters
+	// directory if the driver does not implement process_mad, and no
+	// hw_counters directory if it has no per port hw stats.
+	if hwstats, err := GetRdmaSysfsHwStats(rdmaDevice, port); err == nil {
+		portstats.HwStats = hwstats
 	}
-	portstats.HwStats = hwstats
-
-	stats, err := GetRdmaSysfsStats(rdmaDevice, port)
-	if err != nil {
-		return portstats, nil
+	if stats, err := GetRdmaSysfsStats(rdmaDevice, port); err == nil {
+		portstats.Stats = stats
 	}
-	portstats.Stats = stats
-	portstats.Port = port
 	return portstats, nil
 }
 
